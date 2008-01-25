@@ -2,6 +2,7 @@ __all__ = [
     'image',
     'enums',
     'types',
+    'draw',
     ]
 
 import ctypes

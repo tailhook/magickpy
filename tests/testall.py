@@ -3,7 +3,6 @@
 import unittest
 
 def alltests(): # for setuptools
-    import infusion; infusion.install()
     return _alltests()
 
 def _alltests():
@@ -15,7 +14,6 @@ def _alltests():
     return suite
 
 if __name__ == "__main__":
-    import infusion; infusion.install()
     import sys
 
     if len(sys.argv) > 1:

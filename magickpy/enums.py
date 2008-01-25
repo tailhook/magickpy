@@ -5,6 +5,7 @@ __all__ = [
     'VirtualPixelMethod',
     'ChannelType',
     'FilterTypes',
+    'ColorspaceType',
     ]
 
 def enum_as_param(self):
@@ -141,3 +142,31 @@ class FilterTypes(munepy.Enum):
 
 FilterTypes._as_param_ = property(enum_as_param) #hacks
 FilterTypes.from_param = enum_from_param
+
+class ColorspaceType(munepy.Enum):
+    Undefined = 0
+    RGB = 1
+    GRAY = 2
+    Transparent = 3
+    OHTA = 4
+    Lab = 5
+    XYZ = 6
+    YCbCr = 7
+    YCC = 8
+    YIQ = 9
+    YPbPr = 10
+    YUV = 11
+    CMYK = 12
+    sRGB = 13
+    HSB = 14
+    HSL = 15
+    HWB = 16
+    Rec601Luma = 17
+    Rec601YCbCr = 18
+    Rec709Luma = 19
+    Rec709YCbCr = 20
+    Log = 21
+    CMY = 22
+
+ColorspaceType._as_param_ = property(enum_as_param) #hacks
+ColorspaceType.from_param = enum_from_param

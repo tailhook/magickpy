@@ -4,8 +4,8 @@ import os.path
 class TestSimple(unittest.TestCase):
 
     def setUp(self):
-        global Image, Color, CompositeOp, VirtualPixelMethod, ChannelType
-        from magickpy import Image, Color, CompositeOp, VirtualPixelMethod, ChannelType
+        global Image, Color, CompositeOp, VirtualPixelMethod, ChannelType, ImageMagickException
+        from magickpy import Image, Color, CompositeOp, VirtualPixelMethod, ChannelType, ImageMagickException
         self.samplepath = os.path.join(os.path.dirname(__file__), 'sample.jpg')
         self.samplepath2 = os.path.join(os.path.dirname(__file__), 'star.png')
         self.outputpath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'build', 'sample.jpg')
@@ -31,6 +31,10 @@ class TestSimple(unittest.TestCase):
         im = Image.read(self.samplepath)
         self.assertTrue(im.write(self.outputpath))
 
+    def testWriteError(self):
+        im = Image.read(self.samplepath)
+        self.assertRaises(ImageMagickException, im.write, '/tmp/not_existent_directory/my.jpg')
+
     def testSize(self):
         im = self.testRead()
         self.assertEquals(615, im.width)
@@ -44,7 +48,7 @@ class TestSimple(unittest.TestCase):
 
     def testBackgroundColor(self):
         im = self.testRead()
-        im.setBackgroundColor(Color(0.5, 0.5, 0.5))
+        im.setBackgroundColor(Color.named('red'))
 
     def testMatte(self):
         im = self.testRead()
@@ -90,7 +94,7 @@ class TestSimple(unittest.TestCase):
 
     def testColorize(self):
         im = self.testRead()
-        im2 = im.makeColorize(Color(0.5, 0.5, 0.5), 50)
+        im2 = im.makeColorize(Color.rgb(0.5, 0.5, 0.5), 50)
 
     def testSigmoidalContrast(self):
         im = self.testRead()
@@ -107,3 +111,7 @@ class TestSimple(unittest.TestCase):
     def testNegateImage(self):
         im = self.testRead()
         im.applyNegate(False)
+
+    def testNewImage(self):
+        im = Image.create(100, 100, Color.named("blue"))
+        im.draw("fill green stroke white polygon 10,10 50,90 90,50")

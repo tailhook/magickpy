@@ -121,9 +121,23 @@ class Image(ctypes.Structure):
             inf = ImageInfo()
             inf.filename = file
             exinfo = ExceptionInfo()
-            return ReadImage(ctypes.byref(inf), ctypes.byref(exinfo)).contents
+            res = ReadImage(ctypes.byref(inf), ctypes.byref(exinfo))
+            if not res:
+                raise ImageMagickException(exinfo)
+            return res.contents
         else:
             raise NotImplementedError
+
+    @classmethod
+    def create(C, width, height, color):
+        inf = ImageInfo()
+        res = lib.NewMagickImage(ctypes.byref(inf), width, height, ctypes.byref(color))
+        if not res:
+            raise ImageMagickException(inf.exception)
+        im = ctypes.cast(res, PImage).contents
+        im.setColorspace(ColorspaceType.RGB)
+        im.setBackgroundColor(color)
+        return im
 
     def write(self, file):
         if isinstance(file, basestring):
@@ -145,6 +159,14 @@ class Image(ctypes.Structure):
     @property
     def height(self):
         return self.rows
+
+    def draw(self, string):
+        inf = DrawInfo()
+        buf = ctypes.c_buffer(string)
+        inf.primitive = ctypes.cast(buf, ctypes.c_char_p)
+        inf.fill = Color.rgb(1, 1, 1)
+        if not lib.DrawImage(ctypes.byref(self), ctypes.byref(inf)):
+            raise ImageMagickException(self.exception)
 
     def makeCrop(self, geometry_or_width, height=None, x=None, y=None):
         if height is None:
@@ -181,6 +203,8 @@ class Image(ctypes.Structure):
     applySigmoidalContrast = apply_image_wrapper(lib.SigmoidalContrastImage, ctypes.c_int, ctypes.c_char_p)
     applySeparateChannel = apply_image_wrapper(lib.SeparateImageChannel, ChannelType)
     applyNegate = apply_image_wrapper(lib.NegateImage, ctypes.c_int)
+
+    setColorspace = apply_image_wrapper(lib.SetImageColorspace, ColorspaceType)
 
     def copy(self):
         exc = ExceptionInfo()
@@ -262,7 +286,7 @@ Image._fields_ = [
         ('magick', ctypes.c_char * 4096),
         ('magick_columns', ctypes.c_ulong),
         ('magick_rows', ctypes.c_ulong),
-        ('exception', ExceptionInfo),
+        ('exception', SafeExceptionInfo),
         ('debug', ctypes.c_int),
         ('reference_count', ctypes.c_long),
         ('semaphore', ctypes.c_void_p),
@@ -302,3 +326,5 @@ AllocateImage.restype = PImage
 
 ReadImage = lib.ReadImage
 ReadImage.restype = PImage
+
+from magickpy.draw import DrawInfo #avoiding circular import

@@ -9,29 +9,59 @@ __all__ = [
     'TimerInfo',
     'ProfileInfo',
     'ExceptionInfo',
+    'SafeExceptionInfo',
     'PExceptionInfo',
     'ImageMagickException',
     ]
 
 import ctypes
 from magickpy import lib
+from enums import ColorspaceType
 
 class PixelPacket(ctypes.Structure):
     _fields_ = [
-        ('blue', ctypes.c_short),
-        ('green', ctypes.c_short),
-        ('red', ctypes.c_short),
-        ('opacity', ctypes.c_short),
+        ('blue', ctypes.c_ushort),
+        ('green', ctypes.c_ushort),
+        ('red', ctypes.c_ushort),
+        ('opacity', ctypes.c_ushort),
+        ]
+
+class MagickPixelPacket(ctypes.Structure):
+    _fields_ = [
+        ('storage_class', ctypes.c_int),
+        ('colorspace', ctypes.c_int),
+        ('matte', ctypes.c_int),
+        ('fuzz', ctypes.c_double),
+        ('depth', ctypes.c_int),
+        ('red', ctypes.c_double),
+        ('green', ctypes.c_double),
+        ('blue', ctypes.c_double),
+        ('opacity', ctypes.c_double),
+        ('index', ctypes.c_double),
         ]
 
 def scale_to_quantum(f):
-    return ctypes.c_short(int(f*65535))
+    return ctypes.c_ushort(int(f*65535))
 
 class Color(PixelPacket):
-    def __new__(C, r, g, b):
-        return super(Color, C).__new__(C, *map(scale_to_quantum, (r, g, b)))
-    def __init__(C, r, g, b):
-        return super(Color, C).__init__(*map(scale_to_quantum, (r, g, b)))
+    @classmethod
+    def rgb(C, r, g, b, a=0):
+        return C(*map(scale_to_quantum, (b, g, r, a)))
+
+    @classmethod
+    def named(C, name):
+        exc = ExceptionInfo()
+        col = MagickPixelPacket()
+        col.colorspace = int(ColorspaceType.RGB)
+        if not lib.QueryMagickColor(name, ctypes.byref(col), ctypes.byref(exc)):
+            raise ImageMagickException(col)
+        return C(*map(int, (col.blue, col.green, col.red, col.opacity)))
+
+    def __repr__(self):
+        return '<Color: rgba(%d,%d,%d,%d)>' % (self.red, self.green, self.blue, self.opacity)
+
+    def __str__(self):
+        return '#%02x%02x%02x%02x' % tuple(v >> 8 for v in (self.red, self.green, self.blue, self.opacity))
 
 class PrimaryInfo(ctypes.Structure):
     _fields_ = [
@@ -86,7 +116,8 @@ class ProfileInfo(ctypes.Structure):
         ('signature', ctypes.c_ulong),
         ]
 
-class ExceptionInfo(ctypes.Structure):
+class SafeExceptionInfo(ctypes.Structure):
+    """ExceptionInfo info for embedding into another structures"""
     _fields_ = [
         ('severity', ctypes.c_int),
         ('error_number', ctypes.c_int),
@@ -97,6 +128,11 @@ class ExceptionInfo(ctypes.Structure):
         ('semaphore', ctypes.c_void_p),
         ('signature', ctypes.c_ulong),
         ]
+    def __new__(self):
+        raise NotImplementedError
+
+class ExceptionInfo(SafeExceptionInfo):
+    """ExceptionInfo info for standalone use"""
     def __new__(self):
         return AcquireExceptionInfo().contents
     def __del__(self):
