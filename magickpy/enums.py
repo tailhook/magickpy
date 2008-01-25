@@ -1,4 +1,5 @@
 import munepy
+from magickpy.util import wrap_enum_class
 
 __all__ = [
     'CompositeOp',
@@ -7,13 +8,6 @@ __all__ = [
     'FilterTypes',
     'ColorspaceType',
     ]
-
-def enum_as_param(self):
-    return int(self)
-
-@classmethod
-def enum_from_param(C, value):
-    return int(value)
 
 class CompositeOp(munepy.Enum):
     Undefined = 0
@@ -73,8 +67,7 @@ class CompositeOp(munepy.Enum):
     Xor = 54
     Divide = 55
 
-CompositeOp._as_param_ = property(enum_as_param) #hacks
-CompositeOp.from_param = enum_from_param
+wrap_enum_class(CompositeOp)
 
 class VirtualPixelMethod(munepy.Enum):
     Undefined = 0
@@ -91,8 +84,7 @@ class VirtualPixelMethod(munepy.Enum):
     Gray = 11
     White = 12
 
-VirtualPixelMethod._as_param_ = property(enum_as_param) #hacks
-VirtualPixelMethod.from_param = enum_from_param
+wrap_enum_class(VirtualPixelMethod)
 
 class ChannelType(munepy.Enum):
     Undefined = 0
@@ -104,8 +96,7 @@ class ChannelType(munepy.Enum):
     All = 0xff
     Defaults = (All &~ Alpha)
 
-ChannelType._as_param_ = property(enum_as_param) #hacks
-ChannelType.from_param = enum_from_param
+wrap_enum_class(ChannelType)
 # Aliases
 ChannelType.Yellow = ChannelType.Blue
 ChannelType.Opacity = ChannelType.Alpha
@@ -140,8 +131,7 @@ class FilterTypes(munepy.Enum):
     BartlettFilter = 21
     SentinelFilter = 22  # a count of all the filters, not a real filter
 
-FilterTypes._as_param_ = property(enum_as_param) #hacks
-FilterTypes.from_param = enum_from_param
+wrap_enum_class(FilterTypes)
 
 class ColorspaceType(munepy.Enum):
     Undefined = 0
@@ -168,5 +158,4 @@ class ColorspaceType(munepy.Enum):
     Log = 21
     CMY = 22
 
-ColorspaceType._as_param_ = property(enum_as_param) #hacks
-ColorspaceType.from_param = enum_from_param
+wrap_enum_class(ColorspaceType)

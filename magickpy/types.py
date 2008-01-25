@@ -9,13 +9,12 @@ __all__ = [
     'TimerInfo',
     'ProfileInfo',
     'ExceptionInfo',
-    'SafeExceptionInfo',
-    'PExceptionInfo',
     'ImageMagickException',
     ]
 
 import ctypes
 from magickpy import lib
+from magickpy.util import wrap_ptr_class
 from enums import ColorspaceType
 
 class PixelPacket(ctypes.Structure):
@@ -116,7 +115,7 @@ class ProfileInfo(ctypes.Structure):
         ('signature', ctypes.c_ulong),
         ]
 
-class SafeExceptionInfo(ctypes.Structure):
+class _ExceptionInfo(ctypes.Structure):
     """ExceptionInfo info for embedding into another structures"""
     _fields_ = [
         ('severity', ctypes.c_int),
@@ -131,19 +130,9 @@ class SafeExceptionInfo(ctypes.Structure):
     def __new__(self):
         raise NotImplementedError
 
-class ExceptionInfo(SafeExceptionInfo):
-    """ExceptionInfo info for standalone use"""
-    def __new__(self):
-        return AcquireExceptionInfo().contents
-    def __del__(self):
-        lib.DestroyExceptionInfo(ctypes.byref(self))
-
-PExceptionInfo = ctypes.POINTER(ExceptionInfo)
+ExceptionInfo = wrap_ptr_class(_ExceptionInfo, lib.AcquireExceptionInfo, lib.DestroyExceptionInfo)
 
 class ImageMagickException(Exception):
     def __init__(self, exc):
         self.native_exc = exc
         super(ImageMagickException, self).__init__(exc.reason)
-
-AcquireExceptionInfo = lib.AcquireExceptionInfo
-AcquireExceptionInfo.restype = PExceptionInfo

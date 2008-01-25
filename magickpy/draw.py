@@ -6,9 +6,10 @@ __all__ = [
     ]
 
 import ctypes
-from magickpy.image import PImage
+from magickpy.image import Image
 from magickpy.types import RectangleInfo, PixelPacket
 from magickpy.enums import CompositeOp
+from magickpy.util import wrap_ptr_class
 from magickpy import lib
 
 class SegmentInfo(ctypes.Structure):
@@ -40,9 +41,12 @@ class GradientInfo(ctypes.Structure):
         ('debug', ctypes.c_int),
         ('signature', ctypes.c_ulong),
         ]
+    def __new__(self):
+        raise NotImplementedError
 
 class ElementReference(ctypes.Structure):
-    pass
+    def __new__(self):
+        raise NotImplementedError
 ElementReference._fields_ = [
         ('id', ctypes.c_char_p),
         ('type', ctypes.c_int),
@@ -52,7 +56,7 @@ ElementReference._fields_ = [
         ('next', ctypes.POINTER(ElementReference)),
     ]
 
-class DrawInfo(ctypes.Structure):
+class _DrawInfo(ctypes.Structure):
     _fields_ = [
         ('primitive', ctypes.c_char_p),
         ('geometry', ctypes.c_char_p),
@@ -63,9 +67,9 @@ class DrawInfo(ctypes.Structure):
         ('stroke', PixelPacket),
         ('stroke_width', ctypes.c_double),
         ('gradient', GradientInfo),
-        ('fill_pattern', PImage),
-        ('tile', PImage),
-        ('stroke_pattern', PImage),
+        ('fill_pattern', Image),
+        ('tile', Image),
+        ('stroke_pattern', Image),
         ('stroke_antialias', ctypes.c_int),
         ('text_antialias', ctypes.c_int),
         ('fill_fule', ctypes.c_int),
@@ -100,7 +104,5 @@ class DrawInfo(ctypes.Structure):
         ('debug', ctypes.c_int),
         ('signature', ctypes.c_ulong),
         ]
-    def __new__(C):
-        return ctypes.cast(lib.AcquireDrawInfo(), ctypes.POINTER(DrawInfo)).contents
-    def __del__(self):
-        lib.DestroyDrawInfo(ctypes.byref(self))
+
+DrawInfo = wrap_ptr_class(_DrawInfo, lib.AcquireDrawInfo, lib.DestroyDrawInfo)

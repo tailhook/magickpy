@@ -114,4 +114,9 @@ class TestSimple(unittest.TestCase):
 
     def testNewImage(self):
         im = Image.create(100, 100, Color.named("blue"))
+        self.assertTrue(im)
+        return im
+
+    def testDrawImage(self):
+        im = self.testNewImage()
         im.draw("fill green stroke white polygon 10,10 50,90 90,50")

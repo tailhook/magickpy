@@ -1,6 +1,9 @@
 from magickpy import lib
+from magickpy.util import wrap_ptr_class
 from magickpy.enums import *
-from magickpy.types import *
+from magickpy.types import (_ExceptionInfo, ExceptionInfo,
+    TimerInfo, ProfileInfo, ImageMagickException,
+    PixelPacket, Color, RectangleInfo, ChromaticityInfo, ErrorInfo)
 import ctypes
 
 __all__ = [
@@ -8,7 +11,7 @@ __all__ = [
     'ImageInfo',
     ]
 
-class ImageInfo(ctypes.Structure):
+class _ImageInfo(ctypes.Structure):
     _fields_ = [
         ('compression', ctypes.c_int),
         ('orientation', ctypes.c_int),
@@ -72,162 +75,13 @@ class ImageInfo(ctypes.Structure):
         ('transparent_color', PixelPacket),
         ('profile', ctypes.c_void_p),
         ]
-    def __new__(C):
-        return CloneImageInfo(None).contents
-    def __del__(self):
-        return lib.DestroyImageInfo(ctypes.byref(self))
 
-PImageInfo = ctypes.POINTER(ImageInfo)
+ImageInfo = wrap_ptr_class(_ImageInfo, lib.AcquireImageInfo, lib.DestroyImageInfo)
 
-wrapinit = []
-FwPImage = object()
+class _Image(ctypes.Structure):
+    pass
 
-def new_image_wrapper(fun, *args):
-    args = [FwPImage] + list(args) + [ctypes.POINTER(ExceptionInfo)]
-    def func(self, *args):
-        exc = ExceptionInfo()
-        args = [self] + list(args) + [exc]
-        res = fun(*args)
-        if not res:
-            raise ImageMagickError(exc)
-        return res.contents
-    wrapinit.append((fun, args))
-    return func
-
-def apply_image_wrapper(fun, *args):
-    args = [FwPImage] + list(args)
-    def func(self, *args):
-        args = [self] + list(args)
-        res = fun(*args)
-        if not res:
-            raise ImageMagickError(self.exception)
-    wrapinit.append((fun, args))
-    return func
-
-def init_image_wrapper(fun, args):
-    for (i, x) in enumerate(args):
-        if x is FwPImage:
-            args[i] = PImage
-    fun.argtypes = args
-    fun.restype = PImage
-
-class Image(ctypes.Structure):
-
-    def __new__(C):
-        return AllocateImage(None).contents
-    @classmethod
-    def read(C, file):
-        if isinstance(file, basestring):
-            inf = ImageInfo()
-            inf.filename = file
-            exinfo = ExceptionInfo()
-            res = ReadImage(ctypes.byref(inf), ctypes.byref(exinfo))
-            if not res:
-                raise ImageMagickException(exinfo)
-            return res.contents
-        else:
-            raise NotImplementedError
-
-    @classmethod
-    def create(C, width, height, color):
-        inf = ImageInfo()
-        res = lib.NewMagickImage(ctypes.byref(inf), width, height, ctypes.byref(color))
-        if not res:
-            raise ImageMagickException(inf.exception)
-        im = ctypes.cast(res, PImage).contents
-        im.setColorspace(ColorspaceType.RGB)
-        im.setBackgroundColor(color)
-        return im
-
-    def write(self, file):
-        if isinstance(file, basestring):
-            inf = ImageInfo()
-            self.filename = file
-            if not lib.WriteImage(ctypes.byref(inf), ctypes.byref(self)):
-                raise ImageMagickException(self.exception)
-            return True
-        else:
-            raise NotImplementedError
-
-    def __nonzero__(self):
-        return True
-
-    @property
-    def width(self):
-        return self.columns
-
-    @property
-    def height(self):
-        return self.rows
-
-    def draw(self, string):
-        inf = DrawInfo()
-        buf = ctypes.c_buffer(string)
-        inf.primitive = ctypes.cast(buf, ctypes.c_char_p)
-        inf.fill = Color.rgb(1, 1, 1)
-        if not lib.DrawImage(ctypes.byref(self), ctypes.byref(inf)):
-            raise ImageMagickException(self.exception)
-
-    def makeCrop(self, geometry_or_width, height=None, x=None, y=None):
-        if height is None:
-            return self._crop(geometry_or_width)
-        geom = RectangleInfo(geometry_or_width, height, x, y)
-        return self._makeCrop(geom)
-
-    def makeColorize(self, color, opacity_r, opacity_g=None, opacity_b=None):
-        if isinstance(opacity_r, basestring):
-            opacity = opacity_r
-        else:
-            if opacity_g is None:
-                opacity_g = opacity_r
-            if opacity_b is None:
-                opacity_b = opacity_r
-            opacity = "%u/%u/%u" % (opacity_r, opacity_g, opacity_b)
-        return self._makeColorize(opacity, color)
-
-    _makeCrop = new_image_wrapper(lib.CropImage, ctypes.POINTER(RectangleInfo))
-    makeBlur = new_image_wrapper(lib.BlurImage, ctypes.c_double, ctypes.c_double)
-    makeAdaptiveBlur = new_image_wrapper(lib.AdaptiveBlurImage, ctypes.c_double, ctypes.c_double)
-    makeGaussianBlur = new_image_wrapper(lib.GaussianBlurImage, ctypes.c_double, ctypes.c_double)
-    makeMotionBlur = new_image_wrapper(lib.MotionBlurImage, ctypes.c_double, ctypes.c_double, ctypes.c_double)
-    makeShade = new_image_wrapper(lib.ShadeImage, ctypes.c_int, ctypes.c_double, ctypes.c_double)
-    _makeColorize = new_image_wrapper(lib.ColorizeImage, ctypes.c_char_p, Color)
-    makeThumbnail = new_image_wrapper(lib.ThumbnailImage, ctypes.c_ulong, ctypes.c_ulong)
-    makeScale = new_image_wrapper(lib.ScaleImage, ctypes.c_ulong, ctypes.c_ulong)
-    makeSample = new_image_wrapper(lib.SampleImage, ctypes.c_ulong, ctypes.c_ulong)
-    makeResize = new_image_wrapper(lib.ResizeImage, ctypes.c_ulong, ctypes.c_ulong, FilterTypes, ctypes.c_double)
-
-    applyContrastStretch = apply_image_wrapper(lib.ContrastStretchImage, ctypes.c_char_p)
-    applyNormalize = apply_image_wrapper(lib.NormalizeImage)
-    applyComposite = apply_image_wrapper(lib.CompositeImage, CompositeOp, FwPImage, ctypes.c_int, ctypes.c_int)
-    applySigmoidalContrast = apply_image_wrapper(lib.SigmoidalContrastImage, ctypes.c_int, ctypes.c_char_p)
-    applySeparateChannel = apply_image_wrapper(lib.SeparateImageChannel, ChannelType)
-    applyNegate = apply_image_wrapper(lib.NegateImage, ctypes.c_int)
-
-    setColorspace = apply_image_wrapper(lib.SetImageColorspace, ColorspaceType)
-
-    def copy(self):
-        exc = ExceptionInfo()
-        res = ctypes.cast(lib.CloneImage(ctypes.byref(self), 0, 0, True, ctypes.byref(exc)), PImage)
-        if not res:
-            raise ImageMagickException(exc)
-        return res.contents
-
-    def setBackgroundColor(self, color):
-        self.background_color = color
-        lib.SetImageBackgroundColor(ctypes.byref(self))
-
-    def setMatte(self, value):
-        if bool(value) != bool(self.matte):
-            lib.SetImageOpacity(ctypes.byref(self), OpaqueOpacity)
-
-    def setVirtualPixelMethod(self, value):
-        lib.SetImageVirtualPixelMethod(ctypes.byref(self), int(value))
-
-    def __del__(self):
-        lib.DestroyImage(ctypes.byref(self))
-
-Image._fields_ = [
+_Image._fields_ = [
         ('storage_class', ctypes.c_int),
         ('colorspace', ctypes.c_int),
         ('compression', ctypes.c_int),
@@ -266,7 +120,7 @@ Image._fields_ = [
         ('gravity', ctypes.c_int),
         ('compose', ctypes.c_int),
         ('dispose', ctypes.c_int),
-        ('clip_mask', ctypes.POINTER(Image)),
+        ('clip_mask', ctypes.POINTER(_Image)),
         ('scene', ctypes.c_ulong),
         ('delay', ctypes.c_ulong),
         ('ticks_per_second', ctypes.c_long),
@@ -286,7 +140,7 @@ Image._fields_ = [
         ('magick', ctypes.c_char * 4096),
         ('magick_columns', ctypes.c_ulong),
         ('magick_rows', ctypes.c_ulong),
-        ('exception', SafeExceptionInfo),
+        ('exception', _ExceptionInfo),
         ('debug', ctypes.c_int),
         ('reference_count', ctypes.c_long),
         ('semaphore', ctypes.c_void_p),
@@ -295,36 +149,156 @@ Image._fields_ = [
         ('generic_profile', ctypes.POINTER(ProfileInfo)),
         ('generic_profiles', ctypes.c_ulong),
         ('signature', ctypes.c_ulong),
-        ('previous', ctypes.POINTER(Image)),
-        ('list', ctypes.POINTER(Image)),
-        ('next', ctypes.POINTER(Image)),
+        ('previous', ctypes.POINTER(_Image)),
+        ('list', ctypes.POINTER(_Image)),
+        ('next', ctypes.POINTER(_Image)),
         ('interpolate', ctypes.c_int),
         ('black_point_compensation', ctypes.c_int),
         ('transparent_color', PixelPacket),
-        ('mask', ctypes.POINTER(Image)),
+        ('mask', ctypes.POINTER(_Image)),
         ('tile_offset', RectangleInfo),
         ('properties', ctypes.c_void_p),
         ('artifacts', ctypes.c_void_p),
         ]
 
-PImage = ctypes.POINTER(Image)
 
-for w in wrapinit:
-    init_image_wrapper(*w)
+def new_image_wrapper(fun, *args):
+    args = [_PImage] + list(args) + [ExceptionInfo]
+    fun.argtypes = args
+    def func(self, *args):
+        exc = ExceptionInfo()
+        args = [self] + list(args) + [exc]
+        res = fun(*args)
+        if not res:
+            raise ImageMagickError(exc)
+        return Image(res)
+    return func
+
+def apply_image_wrapper(fun, *args):
+    args = [_PImage] + list(args)
+    fun.argtypes = args
+    def func(self, *args):
+        args = [self] + list(args)
+        res = fun(*args)
+        if not res:
+            if self.exception:
+                raise ImageMagickError(self.exception)
+        return bool(res)
+    return func
+
+_PImage = wrap_ptr_class(_Image, lambda:lib.AllocateImage(None), lib.DestroyImage, classname="_PImage")
+
+class Image(_PImage):
+    @classmethod
+    def read(C, file):
+        if isinstance(file, basestring):
+            inf = ImageInfo()
+            inf.filename = file
+            exinfo = ExceptionInfo()
+            res = lib.ReadImage(inf, exinfo)
+            if not res:
+                raise ImageMagickException(exinfo)
+            return C(res)
+        else:
+            raise NotImplementedError
+
+    @classmethod
+    def create(C, width, height, color):
+        inf = ImageInfo()
+        res = lib.NewMagickImage(inf, width, height, ctypes.byref(color))
+        if not res:
+            raise ImageMagickException(inf.exception)
+        im = C(res)
+        im.setColorspace(ColorspaceType.RGB)
+        im.setBackgroundColor(color)
+        return im
+
+    def write(self, file):
+        if isinstance(file, basestring):
+            inf = ImageInfo()
+            self.filename = file
+            if not lib.WriteImage(inf, self):
+                raise ImageMagickException(self.exception)
+            return True
+        else:
+            raise NotImplementedError
+
+    def __nonzero__(self):
+        return True
+
+    @property
+    def width(self):
+        return self.columns
+
+    @property
+    def height(self):
+        return self.rows
+
+    def draw(self, string):
+        inf = DrawInfo()
+        buf = ctypes.c_buffer(string)
+        inf.primitive = ctypes.cast(buf, ctypes.c_char_p)
+        if not lib.DrawImage(self, inf):
+            raise ImageMagickException(self.exception)
+
+    def makeCrop(self, geometry_or_width, height=None, x=None, y=None):
+        if height is None:
+            return self._crop(geometry_or_width)
+        geom = RectangleInfo(geometry_or_width, height, x, y)
+        return self._makeCrop(geom)
+
+    def makeColorize(self, color, opacity_r, opacity_g=None, opacity_b=None):
+        if isinstance(opacity_r, basestring):
+            opacity = opacity_r
+        else:
+            if opacity_g is None:
+                opacity_g = opacity_r
+            if opacity_b is None:
+                opacity_b = opacity_r
+            opacity = "%u/%u/%u" % (opacity_r, opacity_g, opacity_b)
+        return self._makeColorize(opacity, color)
+
+    _makeCrop = new_image_wrapper(lib.CropImage, ctypes.POINTER(RectangleInfo))
+    makeBlur = new_image_wrapper(lib.BlurImage, ctypes.c_double, ctypes.c_double)
+    makeAdaptiveBlur = new_image_wrapper(lib.AdaptiveBlurImage, ctypes.c_double, ctypes.c_double)
+    makeGaussianBlur = new_image_wrapper(lib.GaussianBlurImage, ctypes.c_double, ctypes.c_double)
+    makeMotionBlur = new_image_wrapper(lib.MotionBlurImage, ctypes.c_double, ctypes.c_double, ctypes.c_double)
+    makeShade = new_image_wrapper(lib.ShadeImage, ctypes.c_int, ctypes.c_double, ctypes.c_double)
+    _makeColorize = new_image_wrapper(lib.ColorizeImage, ctypes.c_char_p, Color)
+    makeThumbnail = new_image_wrapper(lib.ThumbnailImage, ctypes.c_ulong, ctypes.c_ulong)
+    makeScale = new_image_wrapper(lib.ScaleImage, ctypes.c_ulong, ctypes.c_ulong)
+    makeSample = new_image_wrapper(lib.SampleImage, ctypes.c_ulong, ctypes.c_ulong)
+    makeResize = new_image_wrapper(lib.ResizeImage, ctypes.c_ulong, ctypes.c_ulong, FilterTypes, ctypes.c_double)
+
+    applyContrastStretch = apply_image_wrapper(lib.ContrastStretchImage, ctypes.c_char_p)
+    applyNormalize = apply_image_wrapper(lib.NormalizeImage)
+    applyComposite = apply_image_wrapper(lib.CompositeImage, CompositeOp, _PImage, ctypes.c_int, ctypes.c_int)
+    applySigmoidalContrast = apply_image_wrapper(lib.SigmoidalContrastImage, ctypes.c_int, ctypes.c_char_p)
+    applySeparateChannel = apply_image_wrapper(lib.SeparateImageChannel, ChannelType)
+    applyNegate = apply_image_wrapper(lib.NegateImage, ctypes.c_int)
+
+    setColorspace = apply_image_wrapper(lib.SetImageColorspace, ColorspaceType)
+
+    def copy(self):
+        exc = ExceptionInfo()
+        res = lib.CloneImage(self, 0, 0, True, exc)
+        if not res:
+            raise ImageMagickException(exc)
+        return Image(res)
+
+    def setBackgroundColor(self, color):
+        self.background_color = color
+        lib.SetImageBackgroundColor(self)
+
+    def setMatte(self, value):
+        if bool(value) != bool(self.matte):
+            lib.SetImageOpacity(self, OpaqueOpacity)
+
+    def setVirtualPixelMethod(self, value):
+        lib.SetImageVirtualPixelMethod(self, int(value))
 
 ## Constants
 OpaqueOpacity = 0
 TransparentOpacity = 65535
-
-## Functions
-
-CloneImageInfo = lib.CloneImageInfo
-CloneImageInfo.restype = PImageInfo
-
-AllocateImage = lib.AllocateImage
-AllocateImage.restype = PImage
-
-ReadImage = lib.ReadImage
-ReadImage.restype = PImage
 
 from magickpy.draw import DrawInfo #avoiding circular import
