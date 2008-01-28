@@ -14,5 +14,5 @@ setup(
     description = "Python object-oriented interface for ImageMagick using ctypes",
     license = "MIT",
     keywords = "imagemagick ctypes image manipulation crop resize retouch",
-    url = "http://www.mr-pc.kiev.ua/projects/MagickPy",
+    url = "http://www.mr-pc.kiev.ua/en/projects/MagickPy",
 )
