@@ -3,8 +3,8 @@ import unittest
 class TestRGB(unittest.TestCase):
 
     def setUp(self):
-        global Color
-        from magickpy import Color
+        global Color, ImageMagickException
+        from magickpy import Color, ImageMagickException
 
     def testRgb(self):
         c = Color.rgb(0.5, 0.5, 0.5)
@@ -21,3 +21,6 @@ class TestRGB(unittest.TestCase):
     def testStr(self):
         c = Color.named("yellow")
         self.assertEquals('#ffff0000', str(c))
+
+    def testUnknown(self):
+        self.assertRaises(ImageMagickException, Color.named, "no_such_color")
