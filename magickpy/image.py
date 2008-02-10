@@ -171,7 +171,7 @@ def new_image_wrapper(fun, *args):
         args = [self] + list(args) + [exc]
         res = fun(*args)
         if not res:
-            raise ImageMagickError(exc)
+            raise ImageMagickException(exc)
         return Image(res)
     return func
 
@@ -183,7 +183,7 @@ def apply_image_wrapper(fun, *args):
         res = fun(*args)
         if not res:
             if self.exception:
-                raise ImageMagickError(self.exception)
+                raise ImageMagickException(self.exception)
         return bool(res)
     return func
 
@@ -197,6 +197,19 @@ class Image(_PImage):
             inf.filename = file
             exinfo = ExceptionInfo()
             res = lib.ReadImage(inf, exinfo)
+            if not res:
+                raise ImageMagickException(exinfo)
+            return C(res)
+        else:
+            raise NotImplementedError
+
+    @classmethod
+    def ping(C, file):
+        if isinstance(file, basestring):
+            inf = ImageInfo()
+            inf.filename = file
+            exinfo = ExceptionInfo()
+            res = lib.PingImage(inf, exinfo)
             if not res:
                 raise ImageMagickException(exinfo)
             return C(res)

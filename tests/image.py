@@ -22,6 +22,21 @@ class TestSimple(unittest.TestCase):
         self.assertTrue(res)
         return res
 
+    def testPing(self):
+        im = Image.ping(self.samplepath)
+        self.assertTrue(im)
+        self.assertEquals(615, im.width)
+        self.assertEquals(410, im.height)
+        return im
+
+    def testPingExc1(self):
+        res = self.testPing()
+        self.assertRaises(ImageMagickException, res.makeThumbnail, 10, 10)
+
+    def testPingExc2(self):
+        res = self.testPing()
+        self.assertRaises(ImageMagickException, res.applyComposite, CompositeOp.Over, self.testRead2(), 100, 110)
+
     def testRead2(self):
         res = Image.read(self.samplepath2)
         self.assertTrue(res)
