@@ -120,3 +120,13 @@ class TestSimple(unittest.TestCase):
     def testDrawImage(self):
         im = self.testNewImage()
         im.draw("fill green stroke white polygon 10,10 50,90 90,50")
+
+    def testDissolve(self):
+        im = self.testRead()
+        im2 = self.testRead2()
+        im.applyDissolve(im2, 100, 100, percent=50)
+
+    def testDissolveSD(self):
+        im = self.testRead()
+        im2 = self.testRead2()
+        im.applyDissolve(im2, 100, 120, percent=20, dst_percent=80)

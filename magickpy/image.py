@@ -3,6 +3,7 @@ from magickpy.util import wrap_ptr_class
 from magickpy.enums import *
 from magickpy.types import (_ExceptionInfo, ExceptionInfo,
     TimerInfo, ProfileInfo, ImageMagickException,
+    GeometryInfo,
     PixelPacket, Color, RectangleInfo, ChromaticityInfo, ErrorInfo)
 import ctypes
 
@@ -276,6 +277,15 @@ class Image(_PImage):
     applySigmoidalContrast = apply_image_wrapper(lib.SigmoidalContrastImage, ctypes.c_int, ctypes.c_char_p)
     applySeparateChannel = apply_image_wrapper(lib.SeparateImageChannel, ChannelType)
     applyNegate = apply_image_wrapper(lib.NegateImage, ctypes.c_int)
+
+    def applyDissolve(self, im, x=0, y=0, percent=None, dst_percent=None):
+        g = im.geometry
+        s = dst_percent is not None and "%fx%f" % (percent, dst_percent) or "%f" % percent
+        im.geometry = s
+        try:
+            return self.applyComposite(CompositeOp.Dissolve, im, x, y)
+        finally:
+            im.geometry = g
 
     setColorspace = apply_image_wrapper(lib.SetImageColorspace, ColorspaceType)
 

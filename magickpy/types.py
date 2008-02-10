@@ -85,6 +85,15 @@ class RectangleInfo(ctypes.Structure):
         ('y', ctypes.c_long),
         ]
 
+class GeometryInfo(ctypes.Structure):
+    _fields_ = [
+        ('rho', ctypes.c_double),
+        ('sigma', ctypes.c_double),
+        ('xi', ctypes.c_double),
+        ('psi', ctypes.c_double),
+        ('chi', ctypes.c_double),
+        ]
+
 class ErrorInfo(ctypes.Structure):
     _fields_ = [
         ('mean_error_per_pixel', ctypes.c_double),
