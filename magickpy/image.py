@@ -204,6 +204,21 @@ class Image(_PImage):
             raise NotImplementedError
 
     @classmethod
+    def tile(C, file, width, height):
+        if isinstance(file, basestring):
+            inf = ImageInfo()
+            inf.size = "%dx%d" % (width, height)
+            file = 'tile:' + file
+            inf.filename = file
+            exinfo = ExceptionInfo()
+            res = lib.ReadImage(inf, exinfo)
+            if not res:
+                raise ImageMagickException(exinfo)
+            return C(res)
+        else:
+            raise NotImplementedError
+
+    @classmethod
     def ping(C, file):
         if isinstance(file, basestring):
             inf = ImageInfo()

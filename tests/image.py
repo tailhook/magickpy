@@ -145,3 +145,8 @@ class TestSimple(unittest.TestCase):
         im = self.testRead()
         im2 = self.testRead2()
         im.applyDissolve(im2, 100, 120, percent=20, dst_percent=80)
+
+    def testTile(self):
+        im = Image.tile(self.samplepath2, 200, 200)
+        self.assertEquals(im.width, 200)
+        self.assertEquals(im.height, 200)
