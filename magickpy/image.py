@@ -298,6 +298,9 @@ class Image(_PImage):
     makeScale = new_image_wrapper(lib.ScaleImage, ctypes.c_ulong, ctypes.c_ulong)
     makeSample = new_image_wrapper(lib.SampleImage, ctypes.c_ulong, ctypes.c_ulong)
     makeResize = new_image_wrapper(lib.ResizeImage, ctypes.c_ulong, ctypes.c_ulong, FilterTypes, ctypes.c_double)
+    makeTrim = new_image_wrapper(lib.TrimImage)
+    makeExtent = new_image_wrapper(lib.ExtentImage, ctypes.POINTER(RectangleInfo))
+    makeBorder = new_image_wrapper(lib.BorderImage, ctypes.POINTER(RectangleInfo))
 
     applyContrastStretch = apply_image_wrapper(lib.ContrastStretchImage, ctypes.c_char_p)
     applyNormalize = apply_image_wrapper(lib.NormalizeImage)

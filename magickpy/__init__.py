@@ -8,10 +8,15 @@ __all__ = [
 import ctypes
 import atexit
 
-try:
-    lib  = ctypes.CDLL('libMagickCore.so')
-except OSError:
-    lib  = ctypes.CDLL('libMagick.so')
+for dll_name in ('libMagickCore.so', 'libMagick.so', 'CORE_RL_magick_.dll'):
+    try:
+        lib = ctypes.CDLL(dll_name)
+    except OSError:
+        pass
+    else:
+        break
+else:
+    raise RuntimeError("Can't find imagemagick dll")
 
 lib.MagickCoreGenesis(None, False)
 
