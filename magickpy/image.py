@@ -189,6 +189,41 @@ def apply_image_wrapper(fun, *args):
 
 _PImage = wrap_ptr_class(_Image, lambda:lib.AllocateImage(None), lib.DestroyImage, classname="_PImage")
 
+class PixelWrapper(object):
+    def __init__(self, im, x, y, w, h):
+        self.im = im
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        
+    def __enter__(self):
+        exc = ExceptionInfo()
+        px = lib.GetAuthenticPixels(self.im, self.x, self.y, self.w, self.h, exc)
+        if not px:
+            raise ImageMagicException(exc)
+        self.px = ctypes.cast(px, ctypes.POINTER(PixelPacket*(self.w*self.h)))
+        return self
+    
+    def __exit__(self, A, B, C):
+        del self.px
+        lib.SyncAuthenticPixels(self.im)
+        del self.im
+        
+    def __setitem__(self, coord, value):
+        x, y = coord
+        if x > self.w or y > self.h or x < 0 or y < 0:
+            return ValueError("Wrong coordinates %d, %d" % (self.x, self.y))
+        if not isinstance(value, PixelPacket):
+            value = PixelPacket(*value)
+        self.px[0][y*self.w+x] = value
+        
+    def __getitem__(self, coord):
+        x, y = coord
+        if x > self.w or y > self.h or x < 0 or y < 0:
+            return ValueError("Wrong coordinates %d, %d" % (self.x, self.y))
+        return self.px[0][y*self.w+x]
+
 class Image(_PImage):
     @classmethod
     def read(C, file):
@@ -286,6 +321,26 @@ class Image(_PImage):
                 opacity_b = opacity_r
             opacity = "%u/%u/%u" % (opacity_r, opacity_g, opacity_b)
         return self._makeColorize(opacity, color)
+    
+    def copyPixels(self, source, sx, sy, w, h, tx, ty):
+        exc = ExceptionInfo()
+        dest = lib.GetAuthenticPixels(self, tx, ty, w, h, exc)
+        if not dest:
+            raise ImageMagicException(exc)
+        src = lib.GetAuthenticPixels(source, sx, sy, w, h, exc)
+        if not src:
+            raise ImageMagicException(exc)
+        artype = ctypes.POINTER(PixelPacket*(w*h))
+        artype1 = PixelPacket*(w*h)
+        dest = ctypes.cast(dest, artype)
+        src = ctypes.cast(src, artype)
+        for i in xrange(w*h):
+            dest[0][i] = src[0][i]
+        if not lib.SyncAuthenticPixels(self, exc):
+            raise ImageMagicException(exc)
+    
+    def getPixels(self, x, y, w, h):
+        return PixelWrapper(self, x, y, w, h)
 
     _makeCrop = new_image_wrapper(lib.CropImage, ctypes.POINTER(RectangleInfo))
     makeBlur = new_image_wrapper(lib.BlurImage, ctypes.c_double, ctypes.c_double)
