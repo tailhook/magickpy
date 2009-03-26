@@ -373,6 +373,14 @@ class Image(_PImage):
         finally:
             im.geometry = g
 
+    def compare(self, other, metric):
+        dbl = (ctypes.c_double*1)()
+        exp = ExceptionInfo()
+        img = CompareImageChannels(self, other, ChannelType.All, metric, dbl, exp)
+        if not img:
+            raise ImageMagickException(exp)
+        return (dbl[0], Image(img))
+
     setColorspace = apply_image_wrapper(lib.SetImageColorspace, ColorspaceType)
 
     def copy(self):
@@ -392,6 +400,9 @@ class Image(_PImage):
 
     def setVirtualPixelMethod(self, value):
         lib.SetImageVirtualPixelMethod(self, int(value))
+
+CompareImageChannels = lib.CompareImageChannels
+CompareImageChannels.argtypes = [_PImage, _PImage, ChannelType, MetricType, ctypes.POINTER(ctypes.c_double), ExceptionInfo]
 
 ## Constants
 OpaqueOpacity = 0

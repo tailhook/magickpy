@@ -7,6 +7,7 @@ __all__ = [
     'ChannelType',
     'FilterTypes',
     'ColorspaceType',
+    'MetricType',
     ]
 
 class CompositeOp(munepy.Enum):
@@ -159,3 +160,16 @@ class ColorspaceType(munepy.Enum):
     CMY = 22
 
 wrap_enum_class(ColorspaceType)
+
+class MetricType(munepy.Enum):
+    Undefined = 0
+    AbsoluteError = 1
+    MeanAbsoluteError = 2
+    MeanErrorPerPixel = 3
+    MeanSquaredError = 4
+    PeakAbsoluteError = 5
+    PeakSignalToNoiseRatio = 6
+    RootMeanSquaredError = 7
+
+wrap_enum_class(MetricType)
+
