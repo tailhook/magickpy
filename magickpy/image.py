@@ -201,7 +201,7 @@ class PixelWrapper(object):
         exc = ExceptionInfo()
         px = lib.GetAuthenticPixels(self.im, self.x, self.y, self.w, self.h, exc)
         if not px:
-            raise ImageMagicException(exc)
+            raise ImageMagickException(exc)
         self.px = ctypes.cast(px, ctypes.POINTER(PixelPacket*(self.w*self.h)))
         return self
     
@@ -326,10 +326,10 @@ class Image(_PImage):
         exc = ExceptionInfo()
         dest = lib.GetAuthenticPixels(self, tx, ty, w, h, exc)
         if not dest:
-            raise ImageMagicException(exc)
+            raise ImageMagickException(exc)
         src = lib.GetAuthenticPixels(source, sx, sy, w, h, exc)
         if not src:
-            raise ImageMagicException(exc)
+            raise ImageMagickException(exc)
         artype = ctypes.POINTER(PixelPacket*(w*h))
         artype1 = PixelPacket*(w*h)
         dest = ctypes.cast(dest, artype)
@@ -337,7 +337,7 @@ class Image(_PImage):
         for i in xrange(w*h):
             dest[0][i] = src[0][i]
         if not lib.SyncAuthenticPixels(self, exc):
-            raise ImageMagicException(exc)
+            raise ImageMagickException(exc)
     
     def getPixels(self, x, y, w, h):
         return PixelWrapper(self, x, y, w, h)
