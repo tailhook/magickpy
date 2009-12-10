@@ -196,7 +196,7 @@ class PixelWrapper(object):
         self.y = y
         self.w = w
         self.h = h
-        
+
     def __enter__(self):
         exc = ExceptionInfo()
         px = lib.GetAuthenticPixels(self.im, self.x, self.y, self.w, self.h, exc)
@@ -204,12 +204,13 @@ class PixelWrapper(object):
             raise ImageMagickException(exc)
         self.px = ctypes.cast(px, ctypes.POINTER(PixelPacket*(self.w*self.h)))
         return self
-    
+
     def __exit__(self, A, B, C):
         del self.px
-        lib.SyncAuthenticPixels(self.im)
+        exc = ExceptionInfo()
+        lib.SyncAuthenticPixels(self.im, exc)
         del self.im
-        
+
     def __setitem__(self, coord, value):
         x, y = coord
         if x > self.w or y > self.h or x < 0 or y < 0:
@@ -217,7 +218,7 @@ class PixelWrapper(object):
         if not isinstance(value, PixelPacket):
             value = PixelPacket(*value)
         self.px[0][y*self.w+x] = value
-        
+
     def __getitem__(self, coord):
         x, y = coord
         if x > self.w or y > self.h or x < 0 or y < 0:
@@ -242,14 +243,18 @@ class Image(_PImage):
     def tile(C, file, width, height):
         if isinstance(file, basestring):
             inf = ImageInfo()
-            inf.size = "%dx%d" % (width, height)
             file = 'tile:' + file
+            inf.size = "%dx%d" % (width, height)
             inf.filename = file
-            exinfo = ExceptionInfo()
-            res = lib.ReadImage(inf, exinfo)
-            if not res:
-                raise ImageMagickException(exinfo)
-            return C(res)
+            try:
+                exinfo = ExceptionInfo()
+                res = lib.ReadImage(inf, exinfo)
+                if not res:
+                    raise ImageMagickException(exinfo)
+                return C(res)
+            finally:
+                inf.size = 0
+                inf.file = 0
         else:
             raise NotImplementedError
 
@@ -287,6 +292,12 @@ class Image(_PImage):
         else:
             raise NotImplementedError
 
+    def display(self):
+            inf = ImageInfo()
+            res = lib.DisplayImages(inf, self)
+            if not res:
+                raise ImageMagickException(self.exception)
+
     def __nonzero__(self):
         return True
 
@@ -302,8 +313,11 @@ class Image(_PImage):
         inf = DrawInfo()
         buf = ctypes.c_buffer(string)
         inf.primitive = ctypes.cast(buf, ctypes.c_char_p)
-        if not lib.DrawImage(self, inf):
-            raise ImageMagickException(self.exception)
+        try:
+            if not lib.DrawImage(self.value, inf):
+                raise ImageMagickException(self.exception)
+        finally:
+            inf.primitive = 0
 
     def makeCrop(self, geometry_or_width, height=None, x=None, y=None):
         if height is None:
@@ -321,7 +335,7 @@ class Image(_PImage):
                 opacity_b = opacity_r
             opacity = "%u/%u/%u" % (opacity_r, opacity_g, opacity_b)
         return self._makeColorize(opacity, color)
-    
+
     def copyPixels(self, source, sx, sy, w, h, tx, ty):
         exc = ExceptionInfo()
         dest = lib.GetAuthenticPixels(self, tx, ty, w, h, exc)
@@ -338,7 +352,7 @@ class Image(_PImage):
             dest[0][i] = src[0][i]
         if not lib.SyncAuthenticPixels(self, exc):
             raise ImageMagickException(exc)
-    
+
     def getPixels(self, x, y, w, h):
         return PixelWrapper(self, x, y, w, h)
 

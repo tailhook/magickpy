@@ -19,6 +19,10 @@ else:
     raise RuntimeError("Can't find imagemagick dll")
 
 lib.MagickCoreGenesis(None, False)
+lib.SetMagickMemoryMethods(
+    ctypes.pythonapi.PyMem_Malloc,
+    ctypes.pythonapi.PyMem_Realloc,
+    ctypes.pythonapi.PyMem_Free)
 
 atexit.register(lib.MagickCoreTerminus)
 

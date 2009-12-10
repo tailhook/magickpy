@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "MagickPy",
-    version = "0.1.3.1",
+    version = "0.1.4",
     packages = find_packages(exclude=["tests", "tests.*"]),
     test_suite = "tests.testall.alltests",
 
