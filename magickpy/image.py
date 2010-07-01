@@ -3,7 +3,7 @@ from magickpy.util import wrap_ptr_class
 from magickpy.enums import *
 from magickpy.types import (_ExceptionInfo, ExceptionInfo,
     TimerInfo, ProfileInfo, ImageMagickException,
-    GeometryInfo,
+    GeometryInfo, QuantizeInfo,
     PixelPacket, Color, RectangleInfo, ChromaticityInfo, ErrorInfo)
 import ctypes
 
@@ -213,16 +213,16 @@ class PixelWrapper(object):
 
     def __setitem__(self, coord, value):
         x, y = coord
-        if x > self.w or y > self.h or x < 0 or y < 0:
-            return ValueError("Wrong coordinates %d, %d" % (self.x, self.y))
+        if x >= self.w or y >= self.h or x < 0 or y < 0:
+            raise ValueError("Wrong coordinates %d, %d" % (x, y))
         if not isinstance(value, PixelPacket):
             value = PixelPacket(*value)
         self.px[0][y*self.w+x] = value
 
     def __getitem__(self, coord):
         x, y = coord
-        if x > self.w or y > self.h or x < 0 or y < 0:
-            return ValueError("Wrong coordinates %d, %d" % (self.x, self.y))
+        if x >= self.w or y >= self.h or x < 0 or y < 0:
+            raise ValueError("Wrong coordinates %d, %d" % (x, y))
         return self.px[0][y*self.w+x]
 
 class Image(_PImage):
@@ -377,6 +377,14 @@ class Image(_PImage):
     applySigmoidalContrast = apply_image_wrapper(lib.SigmoidalContrastImage, ctypes.c_int, ctypes.c_char_p)
     applySeparateChannel = apply_image_wrapper(lib.SeparateImageChannel, ChannelType)
     applyNegate = apply_image_wrapper(lib.NegateImage, ctypes.c_int)
+
+    def applyQuantize(self, number_colors, dither=DitherMethod.No,
+        colorspace=ColorspaceType.RGB, measure_error=False):
+        qi = QuantizeInfo()
+        qi.dither_method = dither
+        qi.dither = dither != DitherMethod.No
+        qi.number_colors = number_colors
+        lib.QuantizeImage(qi, self)
 
     def applyDissolve(self, im, x=0, y=0, percent=None, dst_percent=None):
         g = im.geometry

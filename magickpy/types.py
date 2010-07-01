@@ -10,6 +10,7 @@ __all__ = [
     'ProfileInfo',
     'ExceptionInfo',
     'ImageMagickException',
+    'QuantizeInfo',
     ]
 
 import ctypes
@@ -124,6 +125,19 @@ class ProfileInfo(ctypes.Structure):
         ('signature', ctypes.c_ulong),
         ]
 
+class _QuantizeInfo(ctypes.Structure):
+    _fields_ = [
+        ('number_colors', ctypes.c_ulong),
+        ('tree_depth', ctypes.c_ulong),
+        ('dither', ctypes.c_int),
+        ('colorspace', ctypes.c_int),
+        ('measure_error', ctypes.c_int),
+        ('signature', ctypes.c_ulong),
+        ('dither_method', ctypes.c_int),
+        ]
+QuantizeInfo = wrap_ptr_class(_QuantizeInfo,
+    lambda: lib.AcquireQuantizeInfo(None), lib.DestroyQuantizeInfo)
+
 class _ExceptionInfo(ctypes.Structure):
     """ExceptionInfo info for embedding into another structures"""
     _fields_ = [
@@ -139,7 +153,8 @@ class _ExceptionInfo(ctypes.Structure):
     def __new__(self):
         raise NotImplementedError
 
-ExceptionInfo = wrap_ptr_class(_ExceptionInfo, lib.AcquireExceptionInfo, lib.DestroyExceptionInfo)
+ExceptionInfo = wrap_ptr_class(_ExceptionInfo,
+    lib.AcquireExceptionInfo, lib.DestroyExceptionInfo)
 
 class ImageMagickException(Exception):
     def __init__(self, exc):

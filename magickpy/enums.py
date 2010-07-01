@@ -8,6 +8,7 @@ __all__ = [
     'FilterTypes',
     'ColorspaceType',
     'MetricType',
+    'DitherMethod',
     ]
 
 class CompositeOp(munepy.Enum):
@@ -173,3 +174,10 @@ class MetricType(munepy.Enum):
 
 wrap_enum_class(MetricType)
 
+class DitherMethod(munepy.Enum):
+    Undefined = 0
+    No = 1
+    Riemersma = 2
+    FloydSteinberg = 3
+
+wrap_enum_class(DitherMethod)
