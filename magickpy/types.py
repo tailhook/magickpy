@@ -53,6 +53,7 @@ class Color(PixelPacket):
         exc = ExceptionInfo()
         col = MagickPixelPacket()
         col.colorspace = int(ColorspaceType.RGB)
+        name = name.encode('utf-8')
         if not lib.QueryMagickColor(name, ctypes.byref(col), exc):
             raise ImageMagickException(exc)
         return C(*list(map(int, (col.blue, col.green, col.red, col.opacity))))
