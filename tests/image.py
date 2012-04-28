@@ -25,8 +25,8 @@ class TestSimple(unittest.TestCase):
     def testPing(self):
         im = Image.ping(self.samplepath)
         self.assertTrue(im)
-        self.assertEquals(615, im.width)
-        self.assertEquals(410, im.height)
+        self.assertEqual(615, im.width)
+        self.assertEqual(410, im.height)
         return im
 
     def testPingExc1(self):
@@ -48,14 +48,14 @@ class TestSimple(unittest.TestCase):
 
     def testSize(self):
         im = self.testRead()
-        self.assertEquals(615, im.width)
-        self.assertEquals(410, im.height)
+        self.assertEqual(615, im.width)
+        self.assertEqual(410, im.height)
 
     def testCrop(self):
         im = self.testRead()
         im2 = im.makeCrop(100, 101, 0, 0)
-        self.assertEquals(100, im2.width)
-        self.assertEquals(101, im2.height)
+        self.assertEqual(100, im2.width)
+        self.assertEqual(101, im2.height)
 
     def testBackgroundColor(self):
         im = self.testRead()
@@ -144,5 +144,5 @@ class TestSimple(unittest.TestCase):
 
     def testTile(self):
         im = Image.tile(self.samplepath2, 200, 200)
-        self.assertEquals(im.width, 200)
-        self.assertEquals(im.height, 200)
+        self.assertEqual(im.width, 200)
+        self.assertEqual(im.height, 200)

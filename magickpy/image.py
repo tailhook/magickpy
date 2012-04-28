@@ -311,7 +311,7 @@ class Image(_PImage):
 
     def draw(self, string):
         inf = DrawInfo()
-        buf = ctypes.c_buffer(string)
+        buf = ctypes.c_buffer(string.encode('utf-8'))
         inf.primitive = ctypes.cast(buf, ctypes.c_char_p)
         try:
             if not lib.DrawImage(self.value, inf):
@@ -334,7 +334,7 @@ class Image(_PImage):
             if opacity_b is None:
                 opacity_b = opacity_r
             opacity = "%u/%u/%u" % (opacity_r, opacity_g, opacity_b)
-        return self._makeColorize(opacity, color)
+        return self._makeColorize(opacity.encode('ascii'), color)
 
     def copyPixels(self, source, sx, sy, w, h, tx, ty):
         exc = ExceptionInfo()
@@ -371,10 +371,10 @@ class Image(_PImage):
     makeExtent = new_image_wrapper(lib.ExtentImage, ctypes.POINTER(RectangleInfo))
     makeBorder = new_image_wrapper(lib.BorderImage, ctypes.POINTER(RectangleInfo))
 
-    applyContrastStretch = apply_image_wrapper(lib.ContrastStretchImage, ctypes.c_char_p)
+    _applyContrastStretch = apply_image_wrapper(lib.ContrastStretchImage, ctypes.c_char_p)
     applyNormalize = apply_image_wrapper(lib.NormalizeImage)
     applyComposite = apply_image_wrapper(lib.CompositeImage, CompositeOp, _PImage, ctypes.c_int, ctypes.c_int)
-    applySigmoidalContrast = apply_image_wrapper(lib.SigmoidalContrastImage, ctypes.c_int, ctypes.c_char_p)
+    _applySigmoidalContrast = apply_image_wrapper(lib.SigmoidalContrastImage, ctypes.c_int, ctypes.c_char_p)
     applySeparateChannel = apply_image_wrapper(lib.SeparateImageChannel, ChannelType)
     applyNegate = apply_image_wrapper(lib.NegateImage, ctypes.c_int)
 
@@ -394,6 +394,12 @@ class Image(_PImage):
             return self.applyComposite(CompositeOp.Dissolve, im, x, y)
         finally:
             im.geometry = g
+
+    def applyContrastStretch(self, val):
+        self._applyContrastStretch(val.encode('ascii'))
+
+    def applySigmoidalContrast(self, a, b):
+        self._applySigmoidalContrast(a, b.encode('ascii'))
 
     def compare(self, other, metric):
         dbl = (ctypes.c_double*1)()
