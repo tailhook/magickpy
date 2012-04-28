@@ -10,9 +10,9 @@ setup(
 
     # metadata for upload to PyPI
     author = "Paul Colomiets",
-    author_email = "pc@gafol.net",
+    author_email = "paul@colomiets.name",
     description = "Python object-oriented interface for ImageMagick using ctypes",
     license = "MIT",
     keywords = "imagemagick ctypes image manipulation crop resize retouch",
-    url = "http://www.mr-pc.kiev.ua/en/projects/MagickPy",
+    url = "http://github.com/tailhook/magickpy",
 )
