@@ -2,11 +2,11 @@ from setuptools import setup, find_packages
 
 setup(
     name = "MagickPy",
-    version = "0.1.5",
+    version = "0.2",
     packages = find_packages(exclude=["tests", "tests.*"]),
     test_suite = "tests.testall.alltests",
 
-    install_requires = ['munepy'],
+    install_requires = ['flufl.enum'],
 
     # metadata for upload to PyPI
     author = "Paul Colomiets",

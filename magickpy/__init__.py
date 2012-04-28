@@ -26,7 +26,7 @@ lib.SetMagickMemoryMethods(
 
 atexit.register(lib.MagickCoreTerminus)
 
-from image import *
-from types import *
-from enums import *
-from animation import *
+from .image import *
+from .types import *
+from .enums import *
+from .animation import *

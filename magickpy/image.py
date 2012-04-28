@@ -228,7 +228,7 @@ class PixelWrapper(object):
 class Image(_PImage):
     @classmethod
     def read(C, file):
-        if isinstance(file, basestring):
+        if isinstance(file, str):
             inf = ImageInfo()
             inf.filename = file
             exinfo = ExceptionInfo()
@@ -241,7 +241,7 @@ class Image(_PImage):
 
     @classmethod
     def tile(C, file, width, height):
-        if isinstance(file, basestring):
+        if isinstance(file, str):
             inf = ImageInfo()
             file = 'tile:' + file
             inf.size = "%dx%d" % (width, height)
@@ -260,7 +260,7 @@ class Image(_PImage):
 
     @classmethod
     def ping(C, file):
-        if isinstance(file, basestring):
+        if isinstance(file, str):
             inf = ImageInfo()
             inf.filename = file
             exinfo = ExceptionInfo()
@@ -283,7 +283,7 @@ class Image(_PImage):
         return im
 
     def write(self, file):
-        if isinstance(file, basestring):
+        if isinstance(file, str):
             inf = ImageInfo()
             self.filename = file
             if not lib.WriteImage(inf, self):
@@ -298,7 +298,7 @@ class Image(_PImage):
             if not res:
                 raise ImageMagickException(self.exception)
 
-    def __nonzero__(self):
+    def __bool__(self):
         return True
 
     @property
@@ -326,7 +326,7 @@ class Image(_PImage):
         return self._makeCrop(geom)
 
     def makeColorize(self, color, opacity_r, opacity_g=None, opacity_b=None):
-        if isinstance(opacity_r, basestring):
+        if isinstance(opacity_r, str):
             opacity = opacity_r
         else:
             if opacity_g is None:
@@ -348,7 +348,7 @@ class Image(_PImage):
         artype1 = PixelPacket*(w*h)
         dest = ctypes.cast(dest, artype)
         src = ctypes.cast(src, artype)
-        for i in xrange(w*h):
+        for i in range(w*h):
             dest[0][i] = src[0][i]
         if not lib.SyncAuthenticPixels(self, exc):
             raise ImageMagickException(exc)

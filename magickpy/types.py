@@ -16,7 +16,7 @@ __all__ = [
 import ctypes
 from magickpy import lib
 from magickpy.util import wrap_ptr_class
-from enums import ColorspaceType
+from .enums import ColorspaceType
 
 class PixelPacket(ctypes.Structure):
     _fields_ = [
@@ -46,7 +46,7 @@ def scale_to_quantum(f):
 class Color(PixelPacket):
     @classmethod
     def rgb(C, r, g, b, a=0):
-        return C(*map(scale_to_quantum, (b, g, r, a)))
+        return C(*list(map(scale_to_quantum, (b, g, r, a))))
 
     @classmethod
     def named(C, name):
@@ -55,7 +55,7 @@ class Color(PixelPacket):
         col.colorspace = int(ColorspaceType.RGB)
         if not lib.QueryMagickColor(name, ctypes.byref(col), exc):
             raise ImageMagickException(exc)
-        return C(*map(int, (col.blue, col.green, col.red, col.opacity)))
+        return C(*list(map(int, (col.blue, col.green, col.red, col.opacity))))
 
     def __repr__(self):
         return '<Color: rgba(%d,%d,%d,%d)>' % (self.red, self.green, self.blue, self.opacity)

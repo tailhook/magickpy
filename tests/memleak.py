@@ -26,7 +26,7 @@ class TestDestructors(unittest.TestCase):
                     with open('/proc/{0}/status'.format(os.getpid()), 'rt') as f:
                         for line in f:
                             if 'VmData' in line:
-                                print line.strip()
+                                print(line.strip())
 
     def testExceptionInfo(self):
         for i in range(10*self.mult):
@@ -51,7 +51,7 @@ class TestDestructors(unittest.TestCase):
 
     def show(self, title, i):
         if self.verbose < 1: return
-        print '>>', title, i
+        print('>>', title, i)
 
 class TestDraw(unittest.TestCase):
 

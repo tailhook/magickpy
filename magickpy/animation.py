@@ -11,13 +11,13 @@ class Animation(object):
     def __init__(self, inf, img):
         self.info = inf
         self.images = [img]
-        while img.next:
-            img = Image(img.next)
+        while img.__next__:
+            img = Image(img.__next__)
             self.images.append(img)
 
     @classmethod
     def read(C, file):
-        if isinstance(file, basestring):
+        if isinstance(file, str):
             inf = ImageInfo()
             inf.filename = file
             exinfo = ExceptionInfo()
@@ -40,7 +40,7 @@ class Animation(object):
         return C(inf, im)
 
     def write(self, file):
-        if isinstance(file, basestring):
+        if isinstance(file, str):
             self.images[0].filename = file
             if not lib.WriteImage(self.info, self.images[0]):
                 raise ImageMagickException(self.images[0].exception)
@@ -49,14 +49,14 @@ class Animation(object):
             raise NotImplementedError
 
     def append(self, img):
-        if img.next or img.previous:
+        if img.__next__ or img.previous:
             raise ValueError("Can't append part of animation, copy() it before appending")
         self.images[-1].next = img
         img.previous = self.images[-1]
         self.images.append(img)
 
     def insert(self, index, image):
-        if image.next or image.previous:
+        if image.__next__ or image.previous:
             raise ValueError("Can't insert part of animation, copy() it before inserting")
         if index > 0:
             self.images[index-1].next = image
@@ -78,7 +78,7 @@ class Animation(object):
         return self.images[key]
 
     def __setitem__(self, key, value):
-        if value.next or value.previous:
+        if value.__next__ or value.previous:
             raise ValueError("Can't insert part of animation, copy() it before inserting")
         if key > 0:
             self.images[key-1].next = value
