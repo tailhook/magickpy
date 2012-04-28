@@ -11,8 +11,8 @@ class Animation(object):
     def __init__(self, inf, img):
         self.info = inf
         self.images = [img]
-        while img.__next__:
-            img = Image(img.__next__)
+        while img.next:
+            img = Image(img.next)
             self.images.append(img)
 
     @classmethod
@@ -49,14 +49,14 @@ class Animation(object):
             raise NotImplementedError
 
     def append(self, img):
-        if img.__next__ or img.previous:
+        if img.next or img.previous:
             raise ValueError("Can't append part of animation, copy() it before appending")
         self.images[-1].next = img
         img.previous = self.images[-1]
         self.images.append(img)
 
     def insert(self, index, image):
-        if image.__next__ or image.previous:
+        if image.next or image.previous:
             raise ValueError("Can't insert part of animation, copy() it before inserting")
         if index > 0:
             self.images[index-1].next = image
@@ -78,7 +78,7 @@ class Animation(object):
         return self.images[key]
 
     def __setitem__(self, key, value):
-        if value.__next__ or value.previous:
+        if value.next or value.previous:
             raise ValueError("Can't insert part of animation, copy() it before inserting")
         if key > 0:
             self.images[key-1].next = value
