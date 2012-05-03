@@ -146,3 +146,13 @@ class TestSimple(unittest.TestCase):
         im = Image.tile(self.samplepath2, 200, 200)
         self.assertEqual(im.width, 200)
         self.assertEqual(im.height, 200)
+
+    def testGetPixels(self):
+        im = Image.create(100, 100, Color.named('white'))
+        with im.getPixels(50, 50, 50, 50) as px:
+            p0 = px[0, 0]
+            self.assertEqual((p0.red, p0.green, p0.blue),
+                               (65535, 65535, 65535))
+            p0 = px[49, 49]
+            self.assertEqual((p0.red, p0.green, p0.blue),
+                               (65535, 65535, 65535))
