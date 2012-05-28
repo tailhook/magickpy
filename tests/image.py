@@ -91,6 +91,10 @@ class TestSimple(unittest.TestCase):
         im = self.testRead2()
         im2 = im.makeMotionBlur(0, 2, 120)
 
+    def testSwirl(self):
+        im = self.testRead2()
+        im2 = im.makeSwirl(45)
+
     def testShade(self):
         im = self.testRead()
         im2 = im.makeShade(True, 120, 21.78)

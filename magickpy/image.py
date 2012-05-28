@@ -189,6 +189,7 @@ def apply_image_wrapper(fun, *args):
 
 _PImage = wrap_ptr_class(_Image, lambda:lib.AllocateImage(None), lib.DestroyImage, classname="_PImage")
 
+
 class PixelWrapper(object):
     def __init__(self, im, x, y, w, h):
         self.im = im
@@ -224,6 +225,7 @@ class PixelWrapper(object):
         if x >= self.w or y >= self.h or x < 0 or y < 0:
             raise ValueError("Wrong coordinates %d, %d" % (x, y))
         return self.px[0][y*self.w+x]
+
 
 class Image(_PImage):
     @classmethod
@@ -370,6 +372,7 @@ class Image(_PImage):
     makeTrim = new_image_wrapper(lib.TrimImage)
     makeExtent = new_image_wrapper(lib.ExtentImage, ctypes.POINTER(RectangleInfo))
     makeBorder = new_image_wrapper(lib.BorderImage, ctypes.POINTER(RectangleInfo))
+    makeSwirl = new_image_wrapper(lib.SwirlImage, ctypes.c_double)
 
     _applyContrastStretch = apply_image_wrapper(lib.ContrastStretchImage, ctypes.c_char_p)
     applyNormalize = apply_image_wrapper(lib.NormalizeImage)
