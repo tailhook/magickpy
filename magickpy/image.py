@@ -313,7 +313,8 @@ class Image(_PImage):
 
     def draw(self, string):
         inf = DrawInfo()
-        buf = ctypes.c_buffer(string.encode('utf-8'))
+        data =  string.encode('utf-8')
+        buf = ctypes.c_buffer(data)
         inf.primitive = ctypes.cast(buf, ctypes.c_char_p)
         try:
             if not lib.DrawImage(self.value, inf):
@@ -323,7 +324,7 @@ class Image(_PImage):
 
     def makeCrop(self, geometry_or_width, height=None, x=None, y=None):
         if height is None:
-            return self._crop(geometry_or_width)
+            return self._makeCrop(geometry_or_width)
         geom = RectangleInfo(geometry_or_width, height, x, y)
         return self._makeCrop(geom)
 
@@ -373,6 +374,7 @@ class Image(_PImage):
     makeExtent = new_image_wrapper(lib.ExtentImage, ctypes.POINTER(RectangleInfo))
     makeBorder = new_image_wrapper(lib.BorderImage, ctypes.POINTER(RectangleInfo))
     makeSwirl = new_image_wrapper(lib.SwirlImage, ctypes.c_double)
+    makeRoll = new_image_wrapper(lib.RollImage, ctypes.c_long, ctypes.c_long)
 
     _applyContrastStretch = apply_image_wrapper(lib.ContrastStretchImage, ctypes.c_char_p)
     applyNormalize = apply_image_wrapper(lib.NormalizeImage)
@@ -380,6 +382,7 @@ class Image(_PImage):
     _applySigmoidalContrast = apply_image_wrapper(lib.SigmoidalContrastImage, ctypes.c_int, ctypes.c_char_p)
     applySeparateChannel = apply_image_wrapper(lib.SeparateImageChannel, ChannelType)
     applyNegate = apply_image_wrapper(lib.NegateImage, ctypes.c_int)
+    applyTransparent = apply_image_wrapper(lib.TransparentImage, PixelPacket, ctypes.c_uint16)
 
     def applyQuantize(self, number_colors, dither=DitherMethod.No,
         colorspace=ColorspaceType.RGB, measure_error=False):
